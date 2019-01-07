@@ -1,0 +1,2 @@
+"../libsvm-3.22/windows/svm-train.exe" -t 2 -c %1 -g %2 ../Iris/iris.app temp/iris.app.model.%1.%2
+"../libsvm-3.22/windows/svm-predict.exe" ../Iris/iris.test temp/iris.app.model.%1.%2 temp/iris.app.model.%1.%2.out
