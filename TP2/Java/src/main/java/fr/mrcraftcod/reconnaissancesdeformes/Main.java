@@ -18,9 +18,14 @@ public class Main{
 	private static final Logger LOGGER = LoggerFactory.getLogger(Main.class);
 	
 	public static void main(String[] args) throws Exception{
-		new File("./temp").mkdirs();
+		File tempFolder = new File("./temp");
+		tempFolder.mkdirs();
 		// bestList();
 		cut(0.1, 100, 0.1, 10, 10, 0.001);
+		
+		for(File f : tempFolder.listFiles())
+			f.delete();
+		LOGGER.info("Deleted temp folder={}", tempFolder.delete());
 	}
 	
 	public static void bestList(){
