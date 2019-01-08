@@ -18,11 +18,16 @@ import java.util.stream.IntStream;
 public class Main{
 	private static final Logger LOGGER = LoggerFactory.getLogger(Main.class);
 	
-	public static void main(String[] args) throws IOException{
-		List<Double> cs = List.of(1D, 2D, 5D, 10D, 100D);
-		List<Double> gs = List.of(0.1D, 0.5D, 1D, 2D, 10D);
-		
+	public static void main(String[] args) throws Exception{
 		new File("./temp").mkdirs();
+		// bestList();
+		cut(0, 100, 0.1, 10, 10, 0.5);
+	}
+	
+	public static void bestList()
+	{
+		com.sun.tools.javac.util.List<Double> cs = com.sun.tools.javac.util.List.of(1D, 2D, 5D, 10D, 100D);
+		com.sun.tools.javac.util.List<Double> gs = List.of(0.1D, 0.5D, 1D, 2D, 10D);
 		
 		cs.parallelStream().flatMap(c -> gs.stream().map(g -> new HashMap.SimpleEntry<>(c, g))).map(couple -> {
 			try{
@@ -40,7 +45,9 @@ public class Main{
 		if(maxC - minC <= precision && maxG - minG <= precision){
 			return new TableValues(minC, maxC, minG, maxG);
 		}
-		Optional<AbstractMap.SimpleEntry<Double, AbstractMap.SimpleEntry<Double, Double>>> best = IntStream.range(0, step).mapToDouble(i -> minC + i * ((maxC - minC) / step)).boxed().parallel().flatMap(c -> IntStream.range(0, step).mapToDouble(i -> minC + i * ((maxC - minC) / step)).mapToObj(g -> new HashMap.SimpleEntry<>(c, g))).map(couple -> {
+		double stepAmountC = (maxC - minC) / step;
+		double stepAmountG = (maxG - minG) / step;
+		Optional<AbstractMap.SimpleEntry<Double, AbstractMap.SimpleEntry<Double, Double>>> best = IntStream.range(0, step).mapToDouble(i -> minC + i * stepAmountC).boxed().parallel().flatMap(c -> IntStream.range(0, step).mapToDouble(i -> minG + i * stepAmountG).mapToObj(g -> new HashMap.SimpleEntry<>(c, g))).map(couple -> {
 			try{
 				svm_train.main(MessageFormat.format("-t 2 -c {0} -g {1} ../Iris/iris.app ./temp/iris.app.model.{0}.{1}", couple.getKey(), couple.getValue()).split(" "));
 				return new HashMap.SimpleEntry<>(svm_predict.main(MessageFormat.format("../Iris/iris.test ./temp/iris.app.model.{0}.{1} ./temp/iris.app.model.{0}.{1}.out", couple.getKey(), couple.getValue()).split(" ")), couple);
@@ -56,7 +63,31 @@ public class Main{
 			double mmaxC = 0D;
 			double mminG = 0D;
 			double mmaxG = 0D;
-			//TODO
+			if(minC == bb.getKey()){
+				mminC = minC;
+			}
+			else{
+				mminC = bb.getKey() - stepAmountC;
+			}
+			if(minG == bb.getValue()){
+				mminG = minG;
+			}
+			else{
+				mminG = bb.getValue() - stepAmountG;
+			}
+			if(maxC == bb.getKey()){
+				mmaxC = maxC;
+			}
+			else{
+				mmaxC = bb.getKey() + stepAmountC;
+			}
+			if(maxG == bb.getValue()){
+				mmaxG = maxG;
+			}
+			else{
+				mmaxG = bb.getValue() + stepAmountG;
+			}
+			return cut(mminC, mmaxC, mminG, mmaxG, step, precision);
 		}
 		throw new Exception("BIG PROBLEM");
 	}
